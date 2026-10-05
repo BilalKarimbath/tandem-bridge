@@ -13,6 +13,7 @@ docs/relay-prompt-revised-draft.md
 docs/session-directory.md
 docs/tandem-bridge.png
 INSTALL.md
+INSTALL-AGENT.md
 install_claude_skill.py
 install_codex_skill.py
 LICENSE

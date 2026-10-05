@@ -66,6 +66,19 @@ class DirectoryTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'multiple live windows .*300, 301'):
             d.whoami({**result, 'state_dir': str(self.ledger)})
 
+    def test_cli_whoami_uses_claude_config_dir(self):
+        home = self.root / 'isolated-claude'
+        self.write(home / 'sessions/300.json', {'pid': 300, 'sessionId': self.b,
+                   'name': 'cold-test', 'cwd': str(self.root), 'status': 'idle'})
+        argv = ['tandem.py', '--state-dir', str(self.ledger), 'discover', '--whoami', '--agent', 'claude']
+        with patch.dict(os.environ, {'CLAUDE_CONFIG_DIR': str(home),
+                                    'CODEX_HOME': str(self.root / 'isolated-codex')}), \
+             patch.object(d, 'caller_claude_session', return_value=self.b), \
+             patch.object(sys, 'argv', argv), redirect_stdout(io.StringIO()) as output:
+            t.main()
+        self.assertIn('This Claude session is named cold-test.', output.getvalue())
+        self.assertIn('Session ID: ' + self.b, output.getvalue())
+
     def codex(self, bad_tail=False):
         path = self.root / 'codex/session_index.jsonl'
         self.write(path, {'id': self.a, 'thread_name': 'worker', 'updated_at': '2026-09-23T00:00:00Z'})
@@ -354,7 +367,7 @@ class DirectoryTests(unittest.TestCase):
         self.args.target, self.args.to_agent = self.b, None
         self.args.executable, self.args.timeout = None, None
         with patch.object(t, 'executable', return_value='claude'), patch.object(t, 'send') as send:
-            send.side_effect = lambda msg, *unused: {'id': msg['id'], 'state': 'relay_reported_queued'}
+            send.side_effect = lambda msg, *unused, **options: {'id': msg['id'], 'state': 'relay_reported_queued'}
             result = t.connect(self.args, t.Ledger(self.ledger))
             self.assertEqual(result['peer_agent'], 'claude')
             self.assertEqual(result['peer_short'], self.b.replace('-', '')[:8])
@@ -397,9 +410,10 @@ class DirectoryTests(unittest.TestCase):
         self.args.executable, self.args.timeout = None, None
         self.args.capability = ['image-analysis', 'image-generation', 'image-analysis']
         with patch.object(t, 'executable', return_value='claude'), patch.object(t, 'send') as send:
-            send.side_effect = lambda msg, *unused: {'id': msg['id'], 'state': 'relay_reported_queued'}
+            send.side_effect = lambda msg, *unused, **options: {'id': msg['id'], 'state': 'relay_reported_queued'}
             t.connect(self.args, t.Ledger(self.ledger))
         msg = send.call_args.args[0]
+        self.assertEqual(send.call_args.kwargs['codex_home'], self.args.codex_home)
         self.assertEqual(msg['mode'], 'read-only')
         self.assertEqual(msg['scope'], {'allowed': [], 'protected': []})
         self.assertEqual(msg['done_when'], ['Receiver replies with its ID and name, or declines'])

@@ -1,5 +1,9 @@
 # Run Tandem from source
 
+If you asked Claude Code or Codex to install Tandem for you, direct that agent
+to [INSTALL-AGENT.md](https://github.com/BilalKarimbath/tandem-bridge/blob/main/INSTALL-AGENT.md).
+The steps below are for a manual setup.
+
 Tandem connects two live peers on one shared task. They cycle build, review
 and fix until the done criterion, a block, or a stated budget ends the work;
 the user remains the only authority. Use a direct user question for one-off
@@ -14,6 +18,15 @@ Install Python 3.10 or newer yourself and use an existing authenticated Claude
 Code or Codex CLI. Check the interpreter rather than assuming an OS ships the
 required version. Tandem does not require Node.js or Next.js; each vendor CLI
 has its own installation requirements.
+
+For isolated agent installations, set `CLAUDE_CONFIG_DIR` and/or `CODEX_HOME`
+before running the helper. The child CLI inherits these settings. An explicit
+non-default home flag is also passed to that child; the ordinary unset home
+variables remain unset. Explicit home flags go **after**
+the subcommand: `discover` and `connect` accept both `--claude-home` and
+`--codex-home`; `send` accepts both; `watch` accepts `--claude-home`.
+`status`, `show`, `receive` and `reply` use the ledger only and take neither
+home flag. Use `--state-dir` before the subcommand for the ledger.
 
 Clone the repository, then select Python 3.10 or newer:
 

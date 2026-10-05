@@ -14,7 +14,7 @@ to the user's agent directly, not through a Tandem `codex exec` shortcut.
 execution needs no third-party packages and generates no Tandem executable.
 No daemon, automatic retry or offline-delivery guarantee is provided.
 The helper reports its release and envelope protocol without opening a ledger:
-`python tandem.py version` (currently `0.6.2` and `TANDEM/1`).
+`python tandem.py version` (currently `0.6.3` and `TANDEM/1`).
 
 Clone with `git clone https://github.com/BilalKarimbath/tandem-bridge`.
 For Claude Code, run `claude plugin marketplace add BilalKarimbath/tandem-bridge`

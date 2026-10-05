@@ -5,6 +5,10 @@
 Tandem lets a Claude session and a Codex session work together on one task,
 with you in charge of what each one may do.
 
+> **AI agents asked to install Tandem:** read and follow
+> [INSTALL-AGENT.md](https://github.com/BilalKarimbath/tandem-bridge/blob/main/INSTALL-AGENT.md),
+> not the manual steps below.
+
 > **One shared task:** Claude Code ↔ Codex
 >
 > **The loop:** build → review → fix → done
@@ -59,40 +63,46 @@ may accept.
 Tandem runs from Python source. It has no runtime Python packages to install
 and no Tandem executable.
 
-## Install
+## Install: ask your agents
 
-### Claude Code
+In Claude Code, send: `Install https://github.com/BilalKarimbath/tandem-bridge`
 
-In Claude Code, add the public marketplace and install the plugin:
+In Codex, send: `Install https://github.com/BilalKarimbath/tandem-bridge`
+
+Each agent can follow [the exact steps written for it](https://github.com/BilalKarimbath/tandem-bridge/blob/main/INSTALL-AGENT.md),
+check its version, and tell you when to restart. Install both sides in any
+order: Claude's plugin and Codex's clone each carry a helper.
+
+### Prefer to type the commands yourself?
+
+In a terminal, install the Claude Code plugin:
 
 ```text
 claude plugin marketplace add BilalKarimbath/tandem-bridge
 claude plugin install tandem-bridge@tandem-bridge
+claude plugin list
 ```
 
-The plugin includes Claude's skill and a copy of the helper.
-
-### Codex
-
-Clone the repo once, then preview and install the Codex skill from it:
+In a terminal, clone the repo outside your project and install Codex's
+skill from it:
 
 ```text
-git clone https://github.com/BilalKarimbath/tandem-bridge
-cd tandem-bridge
+git clone https://github.com/BilalKarimbath/tandem-bridge "$HOME/tandem-bridge"
+cd "$HOME/tandem-bridge"
 python3 install_codex_skill.py --print
 python3 install_codex_skill.py
+python3 tandem.py version
 ```
 
-Use a Python 3.10+ command in place of `python3` if needed (`py -3` on
-Windows). The preview shows the skill before installation. If you already
-have a different copy, the installer refuses to replace it; review and back
-it up first. See [INSTALL.md](INSTALL.md) for those steps and updates.
+On Windows, use `py -3` in place of `python3` after checking it selects Python
+3.10 or newer. On macOS, check `python3 --version` too; the system copy may be
+3.9. `--print` previews the rendered skill and lists its files and hashes; it
+does not install anything. If a different skill copy exists, the installer
+refuses to replace it. See [INSTALL.md](INSTALL.md) for updates and recovery.
 
-Install both parts in any order. Claude has a helper inside its plugin; Codex
-uses the helper in the clone. Check `python tandem.py version` from each
-helper's folder to confirm the same version number. `claude plugin list` also
-shows Claude's plugin version. Then restart Claude Code and open a new Codex
-thread so both load their skills.
+Check both helper versions match (`claude plugin list` shows Claude's plugin
+version). Then restart Claude Code and open a new Codex thread so both load
+their skills.
 
 ## Connect: the important part
 

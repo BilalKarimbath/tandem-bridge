@@ -30,6 +30,31 @@ HERE = Path(__file__).resolve().parent
 SCHEMA = json.loads(files("tandem_bridge").joinpath("SCHEMA.json").read_text(encoding="utf-8"))
 
 
+def default_claude_home():
+    return os.environ.get("CLAUDE_CONFIG_DIR") or str(Path.home() / ".claude")
+
+
+def default_codex_home():
+    return os.environ.get("CODEX_HOME") or str(Path.home() / ".codex")
+
+
+def transport_environment(agent, claude_home, codex_home):
+    """Bind a child CLI to the same selected home used for discovery."""
+    child = os.environ.copy()
+    if agent == "claude":
+        key = "CLAUDE_CONFIG_DIR"
+        selected = claude_home
+        inherited = child.get(key) or str(Path.home() / ".claude")
+    else:
+        key = "CODEX_HOME"
+        selected = codex_home or default_codex_home()
+        inherited = child.get(key) or str(Path.home() / ".codex")
+    selected_path = Path(selected).expanduser().resolve()
+    if selected_path != Path(inherited).expanduser().resolve():
+        child[key] = str(selected_path)
+    return child
+
+
 def extension(name):
     if name not in ("authorization", "opinions"):
         raise ValueError("Unknown extension")
@@ -573,7 +598,7 @@ def fresh_watch(ledger, target, claude_home):
 
 
 def send(msg, ledger, exe, claude_home, timeout, dry_run=False, relay_model=None, relay_cwd=None,
-         relay_prompt="revised", relay="auto"):
+         relay_prompt="revised", relay="auto", codex_home=None):
     if relay not in ("auto", "always", "never"):
         raise ValueError("Unknown relay policy")
     if relay_prompt not in ("legacy", "plain", "revised"):
@@ -624,7 +649,8 @@ def send(msg, ledger, exe, claude_home, timeout, dry_run=False, relay_model=None
     ledger.event(msg, "dispatch_started", relay_session_id=relay_id, **details)
     try:
         proc = subprocess.run(argv, input=stdin, text=True, encoding="utf-8", errors="strict",
-                              capture_output=True, timeout=timeout, shell=False, cwd=relay_cwd)
+                              capture_output=True, timeout=timeout, shell=False, cwd=relay_cwd,
+                              env=transport_environment(msg["to"]["agent"], claude_home, codex_home))
     except (subprocess.TimeoutExpired, OSError, UnicodeError) as error:
         ledger.event(msg, "delivery_unknown", error=type(error).__name__, relay_session_id=relay_id, **details)
         raise ValueError("Transport did not finish reliably; delivery unknown. Do not resend automatically") from error
@@ -716,7 +742,7 @@ def connect(args, ledger):
     if target['agent'] == 'claude':
         recipient_name(args.claude_home, target_id)  # Reject an unusable peer name before writing the outbox.
     immutable_write(ledger.root.parent / 'outbox' / (msg['id'] + '.json'), msg)
-    result = send(msg, ledger, exe, args.claude_home, timeout)
+    result = send(msg, ledger, exe, args.claude_home, timeout, codex_home=args.codex_home)
     prefixes = unique_prefixes(item['session_id'] for item in listing['rows'])
     result['peer_agent'], result['peer_short'] = target['agent'], prefixes[target_id.replace('-', '')]
     return result
@@ -922,7 +948,8 @@ def main(*, legacy_helper_dir=None):
         p.add_argument("message")
         if command == "send":
             p.add_argument("--executable")
-            p.add_argument("--claude-home", default=str(Path.home() / ".claude"))
+            p.add_argument("--claude-home", default=default_claude_home())
+            p.add_argument("--codex-home", default=default_codex_home())
             p.add_argument("--timeout", type=int, help="Seconds; default Claude 300, Codex 60. Timeout leaves delivery unknown.")
             p.add_argument("--dry-run", action="store_true")
             p.add_argument("--relay", choices=["auto", "always", "never"], default="auto",
@@ -950,7 +977,7 @@ def main(*, legacy_helper_dir=None):
     duration.add_argument("--minutes", type=float, default=29)
     duration.add_argument("--stop", action="store_true")
     duration.add_argument("--follow", action="store_true", help="Follow addressed messages and renew a 2-minute heartbeat")
-    watching.add_argument("--claude-home", default=str(Path.home() / ".claude"))
+    watching.add_argument("--claude-home", default=default_claude_home())
     status = sub.add_parser("status")
     status.add_argument("id")
     status.add_argument("--brief", action="store_true", help="One-line dispatch, claim and reply progress")
@@ -976,8 +1003,8 @@ def main(*, legacy_helper_dir=None):
     closing.add_argument("--session", required=True)
     closing.add_argument("--dry-run", action="store_true")
     discover = sub.add_parser("discover")
-    discover.add_argument("--claude-home", default=str(Path.home() / ".claude"))
-    discover.add_argument("--codex-home", default=os.environ.get('CODEX_HOME') or str(Path.home() / '.codex'))
+    discover.add_argument("--claude-home", default=default_claude_home())
+    discover.add_argument("--codex-home", default=default_codex_home())
     discover.add_argument('--format', choices=['json', 'table', 'markdown'], default='json')
     discover.add_argument('--rows', action='store_true', help='Opt into normalized session rows')
     discover.add_argument('--card', nargs='?', const='', help='Print a connection card for a full UUID, or self hint')
@@ -999,8 +1026,8 @@ def main(*, legacy_helper_dir=None):
     hello.add_argument('--session', help='Explicit sender UUID; requires --agent')
     hello.add_argument('--capability', choices=['image-analysis', 'image-generation'], action='append', default=[],
                        help='Sender-reported current-session image capability; repeatable and advisory only')
-    hello.add_argument('--claude-home', default=str(Path.home() / '.claude'))
-    hello.add_argument('--codex-home', default=os.environ.get('CODEX_HOME') or str(Path.home() / '.codex'))
+    hello.add_argument('--claude-home', default=default_claude_home())
+    hello.add_argument('--codex-home', default=default_codex_home())
     hello.add_argument('--executable', help='Override the recipient transport executable')
     hello.add_argument('--timeout', type=int, help='Transport timeout in seconds')
     args = parser.parse_args()
@@ -1144,7 +1171,8 @@ def execute(args, ledger):
             raise ValueError("Timeout must be positive")
         return send(msg, ledger, lambda: executable(msg["to"]["agent"], args.executable), args.claude_home, timeout, args.dry_run,
                     getattr(args, "relay_model", None), getattr(args, "relay_cwd", None),
-                    getattr(args, "relay_prompt", "revised"), getattr(args, "relay", "auto"))
+                    getattr(args, "relay_prompt", "revised"), getattr(args, "relay", "auto"),
+                    getattr(args, "codex_home", None))
     ledger.check_state(msg["id"])
     source_path = message_path(ledger, args.message).resolve()
     if source_path.parent.name == "messages" and source_path.name == msg["id"] + ".json" and source_path.parent.parent != ledger.root:

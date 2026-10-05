@@ -1,5 +1,11 @@
 # Tandem bridge changes
 
+## 0.6.3
+
+Home discovery now honors `CLAUDE_CONFIG_DIR` and `CODEX_HOME`, and the
+selected home follows each Codex queue or Claude relay subprocess. This fixes
+delivery from isolated agent installations without changing TANDEM/1 envelopes.
+
 ## 0.6.2
 
 Moved the detailed command guide to docs/REFERENCE.md and added a short

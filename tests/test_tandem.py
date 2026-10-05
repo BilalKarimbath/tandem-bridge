@@ -429,6 +429,75 @@ class BridgeTests(unittest.TestCase):
                 t.send(msg, self.ledger, "codex.exe", self.root, 1)
             self.assertEqual(runner.call_count, 1)
 
+    def test_agent_home_defaults_honor_environment_then_fall_back(self):
+        claude = self.root / "isolated-claude"
+        codex = self.root / "isolated-codex"
+        with patch.dict(os.environ, {"CLAUDE_CONFIG_DIR": str(claude), "CODEX_HOME": str(codex)}):
+            self.assertEqual(t.default_claude_home(), str(claude))
+            self.assertEqual(t.default_codex_home(), str(codex))
+            with patch.object(t, "discover_claude", return_value=[]) as discover:
+                self.command("discover")
+            discover.assert_called_once_with(str(claude))
+        with patch.dict(os.environ, {"CLAUDE_CONFIG_DIR": "", "CODEX_HOME": ""}):
+            self.assertEqual(t.default_claude_home(), str(Path.home() / ".claude"))
+            self.assertEqual(t.default_codex_home(), str(Path.home() / ".codex"))
+
+    def test_selected_agent_home_reaches_transport_subprocess(self):
+        codex_home = self.root / "isolated-codex"
+        msg = message()
+        with patch.object(t.subprocess, "run", return_value=subprocess.CompletedProcess([], 0, "", "")) as runner:
+            t.send(msg, self.ledger, "codex.exe", self.root, 1, codex_home=codex_home)
+        self.assertEqual(runner.call_args.kwargs["env"]["CODEX_HOME"], str(codex_home.resolve()))
+
+        claude_home = self.root / "isolated-claude"
+        msg = message()
+        msg["to"]["agent"] = "claude"
+        with patch.object(t, "recipient_name", return_value="peer"), patch.object(
+                t.subprocess, "run", return_value=subprocess.CompletedProcess([], 0, "", "")) as runner:
+            t.send(msg, self.ledger, "claude.exe", claude_home, 1)
+        self.assertEqual(runner.call_args.kwargs["env"]["CLAUDE_CONFIG_DIR"], str(claude_home.resolve()))
+
+    def test_transport_does_not_add_default_home_variables(self):
+        without_homes = {key: value for key, value in os.environ.items()
+                         if key not in ("CLAUDE_CONFIG_DIR", "CODEX_HOME")}
+        with patch.dict(os.environ, without_homes, clear=True):
+            claude = t.transport_environment("claude", Path.home() / ".claude", None)
+            codex = t.transport_environment("codex", Path.home() / ".claude",
+                                            Path.home() / ".codex")
+            msg = message()
+            with patch.object(t.subprocess, "run",
+                    return_value=subprocess.CompletedProcess([], 0, "", "")) as runner:
+                t.send(msg, self.ledger, "codex.exe", Path.home() / ".claude", 1)
+            self.assertNotIn("CODEX_HOME", runner.call_args.kwargs["env"])
+            msg = message()
+            msg["to"]["agent"] = "claude"
+            with patch.object(t, "recipient_name", return_value="peer"), patch.object(
+                    t.subprocess, "run",
+                    return_value=subprocess.CompletedProcess([], 0, "", "")) as runner:
+                t.send(msg, self.ledger, "claude.exe", Path.home() / ".claude", 1)
+            self.assertNotIn("CLAUDE_CONFIG_DIR", runner.call_args.kwargs["env"])
+        self.assertNotIn("CLAUDE_CONFIG_DIR", claude)
+        self.assertNotIn("CODEX_HOME", codex)
+
+    def test_transport_preserves_inherited_home_variables(self):
+        claude_home = str(self.root / "inherited-claude")
+        codex_home = str(self.root / "inherited-codex")
+        with patch.dict(os.environ, {"CLAUDE_CONFIG_DIR": claude_home,
+                                          "CODEX_HOME": codex_home}):
+            claude = t.transport_environment("claude", claude_home, None)
+            codex = t.transport_environment("codex", claude_home, codex_home)
+        self.assertEqual(claude["CLAUDE_CONFIG_DIR"], claude_home)
+        self.assertEqual(codex["CODEX_HOME"], codex_home)
+
+    def test_send_accepts_codex_home_after_subcommand(self):
+        msg = message()
+        envelope = self.root / "message.json"
+        t.immutable_write(envelope, msg)
+        codex_home = self.root / "isolated-codex"
+        with patch.object(t, "send", return_value={"dry_run": True}) as sending:
+            self.command("send", str(envelope), "--dry-run", "--codex-home", str(codex_home))
+        self.assertEqual(sending.call_args.args[-1], str(codex_home))
+
     def test_real_process_preserves_queue_argument(self):
         msg = message()
         argv, stdin, relay = t.transport(msg, "codex.exe", self.root)
