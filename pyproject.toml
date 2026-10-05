@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tandem-bridge"
+version = "0.6.1"
+description = "Local, on-demand peer coordination between Codex and Claude sessions"
+license = "Apache-2.0"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+test = ["jsonschema==4.26.0", "rfc3339-validator==0.1.4"]
+
+[tool.setuptools]
+packages = ["tandem_bridge"]
+
+[tool.setuptools.package-data]
+tandem_bridge = ["*.json"]

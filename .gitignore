@@ -1,0 +1,14 @@
+__pycache__/
+state/
+provenance/
+outbox/
+tests/__pycache__/
+.tandem/
+.tandem/handoff/
+.env
+.env.*
+*.key
+build/
+dist/
+*.egg-info/
+.public-export-private-words

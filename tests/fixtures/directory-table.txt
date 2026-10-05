@@ -1,0 +1,20 @@
+tandem - sessions  refreshed 12:00 UTC  11 sessions / 6 pairs
+ledger /work/alpha/.tandem/state
+PAIR  claude 00000000 <-> codex 00000001  20 exchanges - last 1 min
+  claude peer-0                 alpha          idle      5 min  - +5 pairs
+* codex  peer-1                 alpha          saved     5 min  gpt-test / low
+PAIR  claude 00000000 <-> codex 00000002  1 exchange - last 2 min
+  claude peer-0                 alpha          idle      5 min  - +5 pairs
+  codex  peer-2                 alpha          saved     5 min  gpt-test / low
+PAIR  claude 00000000 <-> codex 00000003  1 exchange - last 3 min
+  claude peer-0                 alpha          idle      5 min  - +5 pairs
+  codex  peer-3                 alpha          saved     5 min  gpt-test / low
+... 3 more pairs with claude 00000000, 1 exchange each, last 4 min  --history to expand
+NO KNOWN LINK  4 sessions
+  claude peer-7                 alpha          idle      5 min  -
+  1 internal sessions folded: 1 auto-review  --internal to list
+  1 codex threads older than 30 d  --all to list
+  1 other codex threads (1 known projects)  --all to list
+links = claimed round trips here; not authorization or liveness; refresh before sending
+status: registry busy/idle; saved = consumer unknown; history = ledger only; * = env
+--rows full fields; --card <UUID>; --history / --all / --internal expand; model = last observed

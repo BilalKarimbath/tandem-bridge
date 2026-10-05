@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Tandem message v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["v", "id", "kind", "tag", "created_at", "from", "to", "in_reply_to", "mode", "scope", "done_when", "mutation_key", "body", "result"],
+  "properties": {
+    "v": {"const": 1},
+    "id": {"type": "string", "format": "uuid"},
+    "kind": {"enum": ["task", "reply"]},
+    "tag": {"type": "string", "minLength": 1, "maxLength": 100},
+    "created_at": {"type": "string", "format": "date-time"},
+    "from": {"$ref": "#/$defs/endpoint"},
+    "to": {"$ref": "#/$defs/endpoint"},
+    "in_reply_to": {"anyOf": [{"type": "null"}, {"type": "string", "format": "uuid"}]},
+    "mode": {"enum": ["read-only", "additive-only", "edit-in-place", "render"]},
+    "scope": {"type": "object", "additionalProperties": false, "required": ["allowed", "protected"], "properties": {"allowed": {"$ref": "#/$defs/strings"}, "protected": {"$ref": "#/$defs/strings"}}},
+    "done_when": {"$ref": "#/$defs/strings"},
+    "fyi": {"type": "boolean"},
+    "budget": {"type": "string", "minLength": 1, "maxLength": 200},
+    "evidence_required": {"$ref": "#/$defs/strings"},
+    "mutation_key": {"type": ["string", "null"], "minLength": 1, "maxLength": 200},
+    "body": {"type": "string", "minLength": 1, "maxLength": 12000},
+    "result": {
+      "anyOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "evidence_paths", "limitations"],
+          "properties": {
+            "status": {"enum": ["completed", "blocked"]},
+            "evidence_paths": {"$ref": "#/$defs/strings"},
+            "limitations": {"$ref": "#/$defs/strings"},
+            "evidence_sha256": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["path", "sha256"],
+                "properties": {
+                  "path": {"type": "string", "minLength": 1},
+                  "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "endpoint": {"type": "object", "additionalProperties": false, "required": ["agent", "session_id"], "properties": {"agent": {"enum": ["codex", "claude"]}, "session_id": {"type": "string", "format": "uuid"}}},
+    "strings": {"type": "array", "items": {"type": "string", "minLength": 1}}
+  }
+}

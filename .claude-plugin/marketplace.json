@@ -1,0 +1,8 @@
+{
+  "name": "tandem-bridge",
+  "description": "Install Tandem bridge for Claude Code.",
+  "owner": {"name": "BilalKarimbath"},
+  "plugins": [
+    {"name": "tandem-bridge", "source": "./plugins/claude-tandem"}
+  ]
+}
