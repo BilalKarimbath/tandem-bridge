@@ -18,7 +18,7 @@ def render(root, interpreter):
     binding = (
         f'{START}\nUse interpreter `{Path(interpreter).as_posix()}` with helper '
         f'`{root.as_posix()}/tandem.py`.\nRead [{root.name}/INSTALL.md]({root.as_posix()}/INSTALL.md) for setup and\n'
-        f'[{root.name}/README.md]({root.as_posix()}/README.md) for commands.\n'
+        f'[{root.name}/docs/REFERENCE.md]({root.as_posix()}/docs/REFERENCE.md) for commands.\n'
         'Update this source binding after moving the checkout or interpreter.\n'
         f'No Tandem console executable is installed.\n{END}'
     )

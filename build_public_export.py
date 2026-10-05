@@ -6,12 +6,15 @@ from pathlib import Path, PurePosixPath
 import re
 import shutil
 import sys
+import zlib
 
 
 ROOT = Path(__file__).resolve().parent
 ALLOWLIST = ROOT / 'PUBLIC-ALLOWLIST.txt'
 MANIFEST = 'PUBLIC-MANIFEST.sha256'
 PRIVATE_WORDS = ROOT / '.public-export-private-words'
+PNG_SIGNATURE = b'\x89PNG\r\n\x1a\n'
+PNG_PRIVATE_CHUNKS = {b'tEXt', b'iTXt', b'zTXt', b'eXIf'}
 
 
 def allowed_paths():
@@ -52,21 +55,60 @@ def privacy_patterns(private_words_file=None):
     return patterns
 
 
+def scan_png(path):
+    """Accept a complete PNG only when it has no text or EXIF chunks."""
+    data = path.read_bytes()
+    if not data.startswith(PNG_SIGNATURE):
+        return ['invalid PNG signature']
+    offset = len(PNG_SIGNATURE)
+    chunk_number = 0
+    findings = []
+    while offset < len(data):
+        if offset + 12 > len(data):
+            return findings + ['truncated PNG chunk']
+        length = int.from_bytes(data[offset:offset + 4], 'big')
+        kind = data[offset + 4:offset + 8]
+        end = offset + 12 + length
+        if end > len(data):
+            return findings + ['truncated PNG chunk']
+        payload = data[offset + 8:offset + 8 + length]
+        checksum = int.from_bytes(data[end - 4:end], 'big')
+        if zlib.crc32(kind + payload) != checksum:
+            return findings + ['invalid PNG chunk checksum']
+        if chunk_number == 0 and (kind != b'IHDR' or length != 13):
+            return findings + ['invalid PNG header']
+        if kind in PNG_PRIVATE_CHUNKS:
+            findings.append(f'PNG text metadata {kind.decode("ascii")}')
+        offset = end
+        chunk_number += 1
+        if kind == b'IEND':
+            if length or offset != len(data):
+                return findings + ['invalid PNG ending']
+            return findings
+    return findings + ['missing PNG ending']
+
+
 def scan_export(folder, private_words_file=None):
-    """Return privacy findings for filenames and UTF-8 contents in an export."""
+    """Return privacy findings for filenames, UTF-8 contents and explicit PNGs."""
     findings = []
     patterns = privacy_patterns(private_words_file)
     for path in sorted(folder.rglob('*')):
         if not path.is_file():
             continue
         name = path.relative_to(folder).as_posix()
+        for label, pattern in patterns:
+            if pattern.search(name):
+                findings.append(f'{name}: {label}')
+        if path.suffix.lower() == '.png':
+            findings.extend(f'{name}: {finding}' for finding in scan_png(path))
+            continue
         try:
             body = path.read_text(encoding='utf-8')
         except UnicodeDecodeError:
             findings.append(f'{name}: non-UTF-8 file')
             continue
         for label, pattern in patterns:
-            if pattern.search(name) or pattern.search(body):
+            if pattern.search(body):
                 findings.append(f'{name}: {label}')
     return findings
 

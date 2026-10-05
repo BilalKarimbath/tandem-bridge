@@ -1,5 +1,10 @@
 # Tandem bridge changes
 
+## 0.6.2
+
+Moved the detailed command guide to docs/REFERENCE.md and added a short
+user-facing README. Runtime behavior and TANDEM/1 envelopes are unchanged.
+
 ## 0.6.1
 
 Added the Apache-2.0 license and a reviewed public export path. Runtime

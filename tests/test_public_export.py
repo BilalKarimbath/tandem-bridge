@@ -2,14 +2,43 @@
 
 import json
 from pathlib import Path
+import struct
 import tempfile
 import unittest
+import zlib
 
 import build_public_export as public
 import build_claude_plugin as plugin
 
 
 class PublicExportTests(unittest.TestCase):
+    @staticmethod
+    def png_chunk(kind, payload):
+        return (len(payload).to_bytes(4, 'big') + kind + payload
+                + zlib.crc32(kind + payload).to_bytes(4, 'big'))
+
+    def sample_png(self, metadata_chunk=None):
+        image = (b'\x89PNG\r\n\x1a\n'
+                 + self.png_chunk(b'IHDR', struct.pack('>IIBBBBB', 1, 1, 8, 6, 0, 0, 0)))
+        if metadata_chunk:
+            image += self.png_chunk(metadata_chunk, b'Comment\x00planted text')
+        return (image + self.png_chunk(b'IDAT', zlib.compress(b'\x00\x00\x00\x00\xff'))
+                + self.png_chunk(b'IEND', b''))
+
+    def test_png_requires_valid_image_without_text_metadata(self):
+        with tempfile.TemporaryDirectory() as scratch:
+            folder = Path(scratch)
+            image = folder / 'hero.png'
+            image.write_bytes(self.sample_png())
+            self.assertEqual(public.scan_export(folder), [])
+            for kind in (b'tEXt', b'iTXt', b'zTXt', b'eXIf'):
+                with self.subTest(kind=kind):
+                    image.write_bytes(self.sample_png(metadata_chunk=kind))
+                    self.assertIn(f'PNG text metadata {kind.decode("ascii")}',
+                                  '\n'.join(public.scan_export(folder)))
+            image.write_bytes(b'not a PNG')
+            self.assertIn('invalid PNG signature', '\n'.join(public.scan_export(folder)))
+
     def test_clean_export_contains_exact_allowlist_and_manifest(self):
         with tempfile.TemporaryDirectory() as scratch:
             target = Path(scratch) / 'export'

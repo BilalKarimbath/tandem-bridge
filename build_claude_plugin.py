@@ -26,8 +26,8 @@ SOURCE_LAUNCH_DOC = "Compatibility launcher: preserves this checkout's legacy le
 PLUGIN_LAUNCH_DOC = 'Plugin launcher: requires a project marker or explicit ledger.'
 ROOT_FILES = (
     'tandem.py', 'SCHEMA.json', 'SCHEMA-authorizations.json',
-    'README.md', 'INSTALL.md', 'CHANGELOG.md', 'LICENSE', 'NOTICE', 'docs/session-directory.md',
-    'docs/relay-prompt-revised-draft.md',
+    'README.md', 'INSTALL.md', 'CHANGELOG.md', 'LICENSE', 'NOTICE', 'docs/REFERENCE.md', 'docs/session-directory.md',
+    'docs/relay-prompt-revised-draft.md', 'docs/tandem-bridge.png', 'docs/install-connect.png',
 )
 
 

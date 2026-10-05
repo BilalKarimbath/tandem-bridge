@@ -75,7 +75,7 @@ python tandem.py --state-dir <project>/.tandem/state discover
 
 `discover` reads registry metadata; it neither creates a ledger nor proves a peer
 is live. Confirm the recipient UUID and user authorization before sending.
-See [the workflow](README.md#workflow) for create, claim, reply and status commands.
+See [the workflow](docs/REFERENCE.md#workflow) for create, claim, reply and status commands.
 Use a new body file for each task and reply; `make` records its source path
 only in the local ledger, and `reply` refuses the task's own body or an exact
 copy. `status <id> --brief` shows dispatch, claim and reply progress without
@@ -195,8 +195,7 @@ Other personal skills and hooks are separate from bridge setup.
 
 ### Install the Claude skill
 
-The Claude Code plugin route bundles the helper and skill. After the public
-repository is available, run:
+The Claude Code plugin route bundles the helper and skill. Run:
 
 ```text
 claude plugin marketplace add BilalKarimbath/tandem-bridge

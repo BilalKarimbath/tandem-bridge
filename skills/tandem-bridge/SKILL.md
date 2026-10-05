@@ -13,7 +13,7 @@ One-off questions go directly to the user's agent, with no `codex exec` route.
 <!-- tandem-install-binding:start -->
 Use a verified Python 3.10+ interpreter with `../../tandem.py`, resolved from
 this staged skill directory. Read `../../INSTALL.md` for setup and
-`../../README.md` for commands. No runtime pip install or Tandem executable.
+`../../docs/REFERENCE.md` for commands. No runtime pip install or Tandem executable.
 <!-- tandem-install-binding:end -->
 
 Pass the same explicit absolute `--state-dir <ledger>` before every helper

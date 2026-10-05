@@ -6,9 +6,12 @@ build_claude_plugin.py
 build_public_export.py
 CHANGELOG.md
 docs/filesystem-portability.md
+docs/install-connect.png
 docs/module-only-decision.md
+docs/REFERENCE.md
 docs/relay-prompt-revised-draft.md
 docs/session-directory.md
+docs/tandem-bridge.png
 INSTALL.md
 install_claude_skill.py
 install_codex_skill.py
@@ -17,8 +20,11 @@ NOTICE
 opinions.py
 plugins/claude-tandem/.claude-plugin/plugin.json
 plugins/claude-tandem/CHANGELOG.md
+plugins/claude-tandem/docs/REFERENCE.md
+plugins/claude-tandem/docs/install-connect.png
 plugins/claude-tandem/docs/relay-prompt-revised-draft.md
 plugins/claude-tandem/docs/session-directory.md
+plugins/claude-tandem/docs/tandem-bridge.png
 plugins/claude-tandem/INSTALL.md
 plugins/claude-tandem/LICENSE
 plugins/claude-tandem/NOTICE
