@@ -88,6 +88,13 @@ a summary.
 - Create a UTF-8 body file and use `make` to record scope and concrete done
   criteria. Include input hashes/live-state expectations for edits. Reuse a
   mutation key for the same intended mutation; it is not a retry token.
+- Put this line in EVERY task body, with N filled in (default 2):
+  `You may use up to N sub-agents (read-only unless stated); you combine their results into one reply.`
+  Add "may edit" only when the task's allowed scope permits edits; protected
+  paths still apply to every sub-agent. Set N=0 and state "no sub-agents" only
+  as a deliberate restriction. The receiver stays responsible
+  for one correlated reply with file:line evidence. Internal sub-agents do not
+  run Tandem themselves.
 - Check `discover` for the selected ledger. Resolution is explicit `--state-dir`
   then `TANDEM_STATE_DIR`, nearest `.tandem`/`.git` project marker, then legacy
   helper/state with a warning for the source wrapper only; module invocation

@@ -1,5 +1,13 @@
 # Tandem bridge changes
 
+## 0.6.4
+
+Every Tandem task now says how many sub-agents the receiver may use (default 2):
+"You may use up to N sub-agents (read-only unless stated); you combine their
+results into one reply." A Codex receiver uses them where work splits naturally.
+Older briefs without the line allow up to 2 read-only helpers for broad read-only
+work. This is skill wording only; helper behavior and TANDEM/1 are unchanged.
+
 ## 0.6.3
 
 Home discovery now honors `CLAUDE_CONFIG_DIR` and `CODEX_HOME`, and the

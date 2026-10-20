@@ -112,6 +112,13 @@ approval question. For edits, resolve every `scope.allowed` path inside the proj
 existing descendants. Verify actual writes because the helper records scope
 but does not sandbox them. No secret or unrelated data disclosure.
 One envelope may appear in chat and in the ledger: claim it once by ID.
+Internal Codex sub-agents do not use Tandem or claim, send, or reply to envelopes.
+If the body permits up to N sub-agents, use up to N where work splits naturally;
+they are read-only unless the body says "may edit" and scope permits edits.
+Apply allowed and protected paths to each sub-agent. Combine their findings
+with file:line evidence into ONE reply; you remain responsible. Obey an explicit
+"no sub-agents". For older briefs with no delegation line, use up to 2 read-only
+sub-agents for broad read-only work when useful.
 
 Read project guidance, perform only scoped work, verify it, then `reply` and
 `send` to the original endpoint. For by-path reviews, compute each named
@@ -153,9 +160,11 @@ optional `--budget` and repeated `--evidence-required` but enforces neither.
 Mark notices that expect no reply with `make --fyi`; claim closes them. Codex
 and Claude may each send to another Claude session through the same `make`
 route. Address peers by full session UUID, not a relay name such as `sf1-46`
-or a forked conversation title. A task body may permit sub-agent delegation
-and specify how many and whether they may read or edit; the receiver remains
-responsible for one correlated reply.
+or a forked conversation title. Every task body includes:
+`You may use up to N sub-agents (read-only unless stated); you combine their results into one reply.`
+Use N=2 by default; add "may edit" only when task scope allows edits. Set N=0
+and write "no sub-agents" only when that restriction is intended.
+See `reference/send-relay-and-material.md` for task-body wording.
 
 Do not look up `--help` or reread docs for routine commands unless one fails.
 Poll a running helper process about every five seconds. After sending a task

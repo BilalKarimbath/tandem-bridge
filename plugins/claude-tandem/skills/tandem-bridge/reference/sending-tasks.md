@@ -53,10 +53,11 @@ apply only to sends that reach Claude.
 
 ## Sub-agents
 
-There is no separate command. If the receiver may split the work, say so in the body: how many
-sub-agents at most, whether they may edit (otherwise read-only), and that the receiver combines their
-findings into ONE reply with file:line evidence. The receiver stays responsible for the task and its
-reply; the task's scope and protected paths still apply to every sub-agent.
+There is no separate command. Put this line in every task body, with N filled in (default 2):
+"You may use up to N sub-agents (read-only unless stated); you combine their results into one reply."
+Add "may edit" only if the task's scope permits edits. Set N=0 and state "no sub-agents" only deliberately.
+The receiver combines findings with file:line evidence into ONE reply and stays responsible;
+the task's scope and protected paths apply to every sub-agent.
 
 ## Visual work
 
